@@ -1,0 +1,10 @@
+ddde6144026ccc5152056d351b450ada *DESCRIPTION
+f02f637f095fffb9d9ba7752b94b18d6 *NAMESPACE
+edb8587d9cd628767e8e1c54884960e6 *R/ocl.R
+349e2bba79db6ede1cf9f7d7034b0ff5 *man/oclDevices.Rd
+80479be3bc4b7e17041275566b56403c *man/oclInfo.Rd
+f2c509f5475d0978fb3b2e6863bc6fb7 *man/oclPlatforms.Rd
+e8307c2ca6eb64e71b9ed33034da731d *man/oclRun.Rd
+0811d8f497edac64471d7a2c0c6567ef *man/oclSimpleKernel.Rd
+7e8e07d3ecd611cad676dad42cde8168 *src/Makevars
+69804e15036ee47340b037b6a4e85f51 *src/ocl.c
