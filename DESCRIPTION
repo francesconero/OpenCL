@@ -1,5 +1,5 @@
 Package: OpenCL
-Version: 0.1-2
+Version: 0.1-3
 Title: Interface allowing R to use OpenCL
 Author: Simon Urbanek <Simon.Urbanek@r-project.org>
 Maintainer: Simon Urbanek <Simon.Urbanek@r-project.org>
@@ -10,6 +10,6 @@ Description: This package provides an interface to OpenCL, allowing R
 License: BSD
 SystemRequirements: OpenCL library
 URL: http://www.rforge.net/OpenCL/
-Packaged: 2012-03-07 18:42:31 UTC; svnuser
+Packaged: 2012-05-25 18:50:23 UTC; svnuser
 Repository: CRAN
-Date/Publication: 2012-03-08 15:14:54
+Date/Publication: 2012-05-26 09:55:44

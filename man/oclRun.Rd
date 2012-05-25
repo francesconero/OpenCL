@@ -12,7 +12,7 @@ Run a kernel using OpenCL.
   call.
 }
 \usage{
-oclRun(kernel, size, ..., native.result = FALSE, wait = TRUE)
+oclRun(kernel, size, ..., native.result = FALSE, wait = TRUE, dim = size)
 oclResult(context, wait = TRUE)
 }
 \arguments{
@@ -26,6 +26,14 @@ oclResult(context, wait = TRUE)
     for the operation to finish and returs the result. Otherwise the
     kernel is  only enqueued,  so it will be run in parallel to R and have 
     to be collected later with \code{oclResult}.}
+  \item{dim}{numeric vector describing the global work
+    dimensions, i.e., the index range that the kernel will be run
+    on. The kernel can use \code{get_global_id(n)} to obtain the
+    \code{(n + 1)}-th dimension index and \code{get_global_size(n)} to
+    get the dimension. OpenCL standard supports only up to three
+    dimensions, you can use use index vectors as arguments if more
+    dimensions are required. Note that \code{dim} is not necessarily the
+    dimension of the result although it can be.}
   \item{context}{context object that was returned by
     \code{oclRun(..., wait = FALSE)} call.}
 }
@@ -75,18 +83,18 @@ library(OpenCL)
 p = oclPlatforms()
 d = oclDevices(p[[1]])
 
-code = c(
-"__kernel void dnorm(\n",
-"  __global float* output,\n",
-" const unsigned int count,\n",
-"  __global float* input,\n",
-" const float mu, const float sigma)\n",
-"{\n",
-"  int i = get_global_id(0);\n",
-"  if(i < count)\n",
-"      output[i] = exp(-0.5f * ((input[i] - mu) / sigma) * ((input[i] - mu) / sigma)) ",
-"      / (sigma * sqrt( 2 * 3.14159265358979323846264338327950288 ) );\n",
-"};")
+code = c("
+__kernel void dnorm(
+  __global float* output,
+ const unsigned int count,
+  __global float* input,
+ const float mu, const float sigma)
+{
+  int i = get_global_id(0);
+  if(i < count)
+      output[i] = exp(-0.5f * ((input[i] - mu) / sigma) * ((input[i] - mu) / sigma))
+      / (sigma * sqrt( 2 * 3.14159265358979323846264338327950288 ) );
+};")
 k.dnorm <- oclSimpleKernel(d[[1]], "dnorm", code, "single")
 f <- function(x, mu=0, sigma=1, ...)
   oclRun(k.dnorm, length(x), x, mu, sigma, ...)
@@ -101,19 +109,18 @@ f(x, native.result=TRUE)
 
 ## does the device support double-precision?
 if (any(grepl("cl_khr_fp64", oclInfo(d[[1]])$exts))) {
-code = c(
-"#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n",
-"__kernel void dnorm(\n",
-"  __global double* output,\n",
-" const unsigned int count,\n",
-"  __global double* input,\n",
-" const double mu, const double sigma)\n",
-"{\n",
-"  int i = get_global_id(0);\n",
-"  if(i < count)\n",
-"      output[i] = exp(-0.5f * ((input[i] - mu) / sigma) * ((input[i] - mu) / sigma)) ",
-"      / (sigma * sqrt( 2 * 3.14159265358979323846264338327950288 ) );\n",
-"};")
+code = c("#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+__kernel void dnorm(
+  __global double* output,
+ const unsigned int count,
+  __global double* input,
+ const double mu, const double sigma)
+{
+  int i = get_global_id(0);
+  if(i < count)
+      output[i] = exp(-0.5f * ((input[i] - mu) / sigma) * ((input[i] - mu) / sigma))
+      / (sigma * sqrt( 2 * 3.14159265358979323846264338327950288 ) );
+};")
 k.dnorm <- oclSimpleKernel(d[[1]], "dnorm", code, "double")
 f <- function(x, mu=0, sigma=1)
   oclRun(k.dnorm, length(x), x, mu, sigma)
@@ -122,5 +129,8 @@ f <- function(x, mu=0, sigma=1)
 f(1:10/2) - dnorm(1:10/2)
 } else cat("\nSorry, your device doesn't support double-precision\n")
 
+## Note that in practice you can use precision="best" in the first
+## example which will pick "double" on devices that support it and
+## "single" elsewhere
 }
 \keyword{interface}
