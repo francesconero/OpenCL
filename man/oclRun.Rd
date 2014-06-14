@@ -12,7 +12,7 @@ Run a kernel using OpenCL.
   call.
 }
 \usage{
-oclRun(kernel, size, ..., native.result = FALSE, wait = TRUE, dim = size)
+oclRun(kernel, size, ..., native.result = FALSE, wait = TRUE, dim = size, local_dim = NULL)
 oclResult(context, wait = TRUE)
 }
 \arguments{
@@ -34,6 +34,13 @@ oclResult(context, wait = TRUE)
     dimensions, you can use use index vectors as arguments if more
     dimensions are required. Note that \code{dim} is not necessarily the
     dimension of the result although it can be.}
+  \item{local_dim}{numeric vector describing the local work
+    dimensions, i.e., the index range that the workgroup will be run
+    on. The kernel can use \code{get_local_id(n)} to obtain the
+    \code{(n + 1)}-th dimension index and \code{get_local_size(n)} to
+    get the dimension. OpenCL standard supports only up to three
+    dimensions, you can use use index vectors as arguments if more
+    dimensions are required. Note that when \code{local_dim} is defaulted to NULL, the workgroup size is automatically calculated by the OpenCL implementation.}
   \item{context}{context object that was returned by
     \code{oclRun(..., wait = FALSE)} call.}
 }

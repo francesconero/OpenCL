@@ -386,7 +386,7 @@ SEXP ocl_call(SEXP args) {
     struct arg_chain *float_args = 0;
     ocl_call_context_t *occ;
     int on, an = 0, ftype = FT_DOUBLE, ftsize, ftres, async;
-    SEXP ker = CADR(args), olen, arg, res, octx, dimVec;
+    SEXP ker = CADR(args), olen, arg, res, octx, dimVec, ldimVec;
     cl_kernel kernel = getKernel(ker);
     cl_context context;
     cl_command_queue commands;
@@ -395,6 +395,8 @@ SEXP ocl_call(SEXP args) {
     cl_int err;
     size_t wdims[3] = {0, 0, 0};
     int wdim = 1;
+    size_t lwdims[3] = {0, 0, 0};
+    int lwdim = 1;
 
     if (clGetKernelInfo(kernel, CL_KERNEL_CONTEXT, sizeof(context), &context, NULL) != CL_SUCCESS || !context)
 	Rf_error("cannot obtain kernel context via clGetKernelInfo");
@@ -424,6 +426,23 @@ SEXP ocl_call(SEXP args) {
     }
     if (wdim < 1 || wdims[0] < 1 || (wdim > 1 && wdims[1] < 1) || (wdim > 2 && wdims[2] < 1))
 	Rf_error("invalid dimensions - muse be a numeric vector with positive values");
+    
+    args = CDR(args);
+    Rboolean local_specified = FALSE;
+    if(!isNull(CAR(args))){
+    	ldimVec = coerceVector(CAR(args), INTSXP);  /* dim */
+    	lwdim = LENGTH(ldimVec);
+    	if (lwdim > 3)
+		Rf_error("OpenCL standard only supports up to three work item dimensions - use index vectors for higher dimensions");
+    	if (lwdim) {
+		int i; /* we don't use memcpy in case int and size_t are different */
+		for (i = 0; i < lwdim; i++)
+	    		lwdims[i] = INTEGER(ldimVec)[i];
+    	}
+    	if (lwdim < 1 || lwdims[0] < 1 || (lwdim > 1 && lwdims[1] < 1) || (lwdim > 2 && lwdims[2] < 1))
+		Rf_error("invalid dimensions - muse be a numeric vector with positive values");
+	local_specified = TRUE;
+    }
 
     args = CDR(args);
     occ = (ocl_call_context_t*) calloc(1, sizeof(ocl_call_context_t));
@@ -510,7 +529,7 @@ SEXP ocl_call(SEXP args) {
 	args = CDR(args);
     }
 
-    if (clEnqueueNDRangeKernel(commands, kernel, wdim, NULL, wdims, NULL, 0, NULL, async ? &occ->event : NULL) != CL_SUCCESS)
+    if (clEnqueueNDRangeKernel(commands, kernel, wdim, NULL, wdims, local_specified ? lwdims : NULL, 0, NULL, async ? &occ->event : NULL) != CL_SUCCESS)
 	Rf_error("Error during kernel execution");
 
     if (async) { /* asynchronous call -> get out and return the context */

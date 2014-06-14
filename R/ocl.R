@@ -40,7 +40,7 @@ oclSimpleKernel <- function(device, name, code, precision = c("single", "double"
   }
   .Call("ocl_ez_kernel", device, name, code, precision)
 }
-oclRun <- function(kernel, size, ..., native.result=FALSE, wait=TRUE, dim=size) .External("ocl_call", kernel, size, native.result, wait, dim, ...)
+oclRun <- function(kernel, size, ..., native.result=FALSE, wait=TRUE, dim=size, local_dim=NULL) .External("ocl_call", kernel, size, native.result, wait, dim, local_dim, ...)
 oclResult <- function(context, wait = TRUE) .Call("ocl_collect_call", context, wait)
 
 oclInfo <- function(item) UseMethod("oclInfo")
